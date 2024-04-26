@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Crowdsource Review</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500&display=swap');
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s ease;
+        }
+        body.dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+        #chatbot {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        #chatbot.dark-mode {
+            background-color: #444;
+            color: #fff;
+        }
+        #chatbot h1 {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        #productLink {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 70%;
+            transition: border-color 0.3s ease;
+        }
+        #productLink.dark-mode {
+            border-color: #666;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #response {
+            overflow: auto;
+            margin-top: 20px;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100px;
+        }
+        .loading-line {
+            width: 10px;
+            height: 50px;
+            margin: 0 5px;
+            background-color: #ccc;
+            animation: loading 1s infinite;
+        }
+        .loading-line.dark-mode {
+            background-color: #666;
+        }
+        @keyframes loading {
+            0% { height: 10px; }
+            50% { height: 50px; }
+            100% { height: 10px; }
+        }
+        .toggle-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .toggle-switch input[type="checkbox"] {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            appearance: none;
+            background-color: #ccc;
+            border-radius: 15px;
+            outline: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .toggle-switch input[type="checkbox"]:before {
+            content: "";
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            background-color: #fff;
+            transition: transform 0.3s ease;
+        }
+        .toggle-switch input[type="checkbox"]:checked {
+            background-color: #666;
+        }
+        .toggle-switch input[type="checkbox"]:checked:before {
+            transform: translateX(30px);
+        }
+    </style>
+</head>
+<body>
+    <div class="toggle-switch">
+        <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+    </div>
+    <div id="chatbot">
+        <h1>Crowdsource Review</h1>
+        <div id="inputBox">
+            <form id="productForm">
+                <input type="text" id="productLink" name="url" placeholder="Product URL...">
+                <button type="submit">Verdict</button>
+            </form>
+        </div>
+        <div id="loadingBox" style="display: none;">
+            <div class="loading">
+                <div class="loading-line"></div>
+                <div class="loading-line"></div>
+                <div class="loading-line"></div>
+            </div>
+        </div>
+        <div id="response"></div>
+    </div>
+    <script>
+        document.getElementById("productForm").addEventListener("submit", function(event) {
+            event.preventDefault(); // Prevent the form from submitting and refreshing the page
+            sendLink();
+        });
+
+        function sendLink() {
+            const link = document.getElementById("productLink").value;
+            document.getElementById("inputBox").style.display = "none";
+            document.getElementById("loadingBox").style.display = "block";
+            fetch("/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ url: link })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("loadingBox").style.display = "none";
+                document.getElementById("inputBox").style.display = "none"; // Hide the input box
+                let formattedVerdict = data.verdict.replace(/\n/g, '<br>'); // Replace \n with <br>
+                document.getElementById("response").innerHTML = formattedVerdict; // Display the verdict summary
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        }
+
+        function toggleDarkMode() {
+            const body = document.body;
+            const chatbot = document.getElementById("chatbot");
+            const productLink = document.getElementById("productLink");
+            const loadingLines = document.querySelectorAll(".loading-line");
+
+            body.classList.toggle("dark-mode");
+            chatbot.classList.toggle("dark-mode");
+            productLink.classList.toggle("dark-mode");
+            loadingLines.forEach(line => line.classList.toggle("dark-mode"));
+        }
+    </script>
+</body>
+</html>
